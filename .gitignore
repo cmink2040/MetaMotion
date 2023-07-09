@@ -4,3 +4,5 @@
 # please install assets via links.isso.com
 *.svg
 *.png
+
+*.pyc
