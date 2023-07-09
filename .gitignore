@@ -1,0 +1,6 @@
+# environmental variables DO NOT CHANGE
+*.env
+
+# please install assets via links.isso.com
+*.svg
+*.png
