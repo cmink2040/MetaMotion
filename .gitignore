@@ -6,3 +6,5 @@
 *.png
 
 *.pyc
+
+*backend/uploads/*
