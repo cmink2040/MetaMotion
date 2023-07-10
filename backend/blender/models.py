@@ -1,6 +1,7 @@
 from django.db import models
 import subprocess
 import os
+import threading
 
 from rq import Queue
 from redis import Redis
@@ -19,36 +20,54 @@ class RenderJob(models.Model):
     end_frame = models.IntegerField(default=250)
     x_res = models.IntegerField(default=1920)
     y_res = models.IntegerField(default=1080)
-    oType = models.CharField(max_length=10 , default='png')
+    oType = models.CharField(max_length=10 , default='PNG')
     file = models.FileField(upload_to='uploads/', null=True, blank=True)
     status = models.CharField(max_length=20 , default='NOT_STARTED')
     progress = models.IntegerField(default=0)
 
     def render(self):
-        self.status = 'IN_PROGRESS'
-        redis_conn = Redis(host=redis_url, port=redis_port)
-        if 'mqs' in Queue.all(connection=redis_conn):
-            queue = Queue('mqs', connection=redis_conn)
-        else:
-            queue = Queue('mqs', connection=redis_conn)
-        render_command = [blender_executable, '-b',
-                          blend_file, '-o',
-                          output_path, '-F',
-                          'PNG', '-x', '1']
-        queue.enqueue(render_blender_job, render_command)
+        directory = "uploads/"+self.name
+        print(directory)
+        try:
+            os.mkdir(directory)
+            print(f"Directory '{directory}' created successfully!")
+        except FileExistsError:
+            print(f"Directory '{directory}' already exists!")
+        except OSError as e:
+            print(f"Failed to create directory '{directory}': {e}")
 
-        self.save()
-    def delete(self):
+        output_path = directory + '/render_'
+        print(output_path)
+
+        def run_blender_render():
+            subprocess_args = ['blender', '-b', self.file.path, '-E', 'CYCLES', '-F',
+                               self.oType, '-x', '1', '-o', output_path,
+                               '-s', str(self.start_frame), '-e', str(self.end_frame), '-a']
+            subprocess.run(subprocess_args)
+        def run_watch():
+            snd_sub_args = [
+                'python', 'blender/watch.py', '-nm', self.name, '-sc', directory, '-st',
+                str(self.start_frame), '-en', str(self.end_frame)
+            ]
+            subprocess.run(snd_sub_args)
+        blender_thread = threading.Thread(target=run_blender_render)
+        watch_thread = threading.Thread(target=run_watch)
+
+        blender_thread.start()
+        watch_thread.start()
+
+        blender_thread.join()
+        watch_thread.join()
+        print("RENDERING BEGINNING")
+        # Executes blender render command
+
+
+        # Watches blender output and updates progress
+
+
+    def delete_self(self):
         self.file.delete()
         self.delete()
-
-def render_blender_job(command):
-    # Construct the command to render the scene using Blender's CLI
-    # Execute the command using subprocess
-    subprocess.Popen(command, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, universal_newlines=True)
-    # Perform any additional cleanup or processing
-    return 'Blender rendering completed successfully.'
 
 # Connect to Redis
 

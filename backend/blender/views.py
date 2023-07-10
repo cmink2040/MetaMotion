@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
+
 class RenderAPIView(APIView):
     def get(self, request):
         print("GET REQUEST")
@@ -29,7 +30,6 @@ class RenderAPIView(APIView):
         qset4 = queryset.filter(status='FAILED')
         qsetP4 = TokenPost(qset4, many=True)
         qsetP4 = qsetP4.data
-        print(qsetP1, qsetP2, qsetP3, qsetP4)
         result_data = []
         result_data.append(qsetP1)
         result_data.append(qsetP2)
@@ -53,13 +53,49 @@ class RenderAPIView(APIView):
         queryset = RenderJob.objects.all()
         qset1 = queryset.filter(name=title)
         if qset1.count() > 0:
-            qset1.first().delete()
-        else:
-            RenderJob(name=title, start_frame=startframe, end_frame=endframe, x_res=xres, y_res=yres,
-                                oType=otype, file=file).save()
-            return Response("Job was succesfully created. ",status=200)
+            qset1.first().delete_self()
+
+        RenderJob(name=title, start_frame=startframe, end_frame=endframe, x_res=xres, y_res=yres,
+                      oType=otype, file=file).save()
+        return Response("Job was succesfully created. ", status=200)
 
         file_path = default_storage.save('uploads/' + file.name, ContentFile(file.read()))
 
         return Response(status=200)
 
+
+class RenderInteractAPIView(APIView):
+    def get(self, request):
+        return Response("GOOD", status=200)
+    def patch(self, request):
+        print("PATH RECIEVED: ")
+        print(request.data)
+        print(request.data.get('title'), request.data.get('progress'), request.data.get('status'))
+        name = request.data.get('title')
+        queryset = RenderJob.objects.all()
+        qset1 = queryset.filter(name=name).first()
+        if (qset1):
+            qset1.progress = request.data.get('progress')
+            qset1.status = request.data.get('status')
+            qset1.save()
+            return Response("Render Updated", status=200)
+        else:
+            return Response("FAILED NOT FOUND", status=404)
+    def post(self, request):
+        name = request.data.get('title')
+        queryset = RenderJob.objects.all()
+        qset1 = queryset.filter(name=name)
+        if (qset1.count() > 0):
+            qset1.first().render()
+            return Response("Render Started", status=200)
+        else:
+            return Response("FAILED NOT FOUND", status=404)
+    def delete(self, request):
+        name = request.data.get('title')
+        queryset = RenderJob.objects.all()
+        qset1 = queryset.filter(name=name)
+        if (qset1.count() > 0):
+            qset1.first().delete_self()
+            return Response("Render Deleted", status=200)
+        else:
+            return Response("FAILED NOT FOUND", status=404)

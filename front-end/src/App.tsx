@@ -2,8 +2,10 @@ import React from 'react'
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
+const refreshTime = 4000;
 const url = 'http://localhost:8000/';
 const graphicsUrl = url + 'graphics/render/blender';
+const interactionUrl = url + '/graphics/render/interact';
 const machineLearningUrl = url + 'machinelearning/';
 
 const default_name = 'render_job';
@@ -65,6 +67,9 @@ const EditMenuN = (props:any) => {
     (async () => {
       
       const formData = new FormData(e.target);
+      if(props.preloaded) {
+        formData.append('file',selectedFile);
+      }
       console.log(formData);
       fetch(graphicsUrl, {
         method: 'POST',
@@ -75,7 +80,6 @@ const EditMenuN = (props:any) => {
     })();
    
     }
-  
 
   const exit = (e:any) => {
     props.setEditMenu(false);
@@ -88,17 +92,23 @@ const EditMenuN = (props:any) => {
   const [oType, setOType] = useState('PNG');
   const [name, setName] = useState('test');
   const [renderNow, setRenderNow] = useState("off");
-  const [selectedFile, setSelectedFile] = useState(null);
-  if(props.preloaded) {
-    setResX(props.resX);
-    setResY(props.resY);
-    setStartFrame(props.startFrame);
-    setEndFrame(props.endFrame);
-    setOType(props.oType);
-    setName(props.name);
-    setRenderNow(props.renderNow);
-    setSelectedFile(props.selectedFile);
-  }
+  const [selectedFile, setSelectedFile] = useState(new File(["Dummy File Content"],"dummy.txt", { type:"text/plain" }));
+  const db = props.db;
+  const fs = props.fs;
+  useEffect(() => {
+    if(props.preloaded) {
+      console.log(db.xres + " ERROR");
+      setResX(db.xres);
+      setResY(db.yres);
+      setStartFrame(db.startFrame);
+      setEndFrame(db.endFrame);
+      setOType(db.otype);
+      setName(db.title);
+     // setRenderNow(db.renderNow);
+      setSelectedFile(fs);      
+    }
+  }, []);
+ 
   const handleFileInput = (e:any) => {
     setSelectedFile(e.target.files[0]);
   }
@@ -139,7 +149,9 @@ const EditMenuN = (props:any) => {
         <input type="text" name='title' className={cssTxt} value={name} onChange={handleName}/>
 
         <h1> Input File </h1>
-        <input type="file" name="file" className={cssTxt} onChange={handleFileInput}/>
+        <p className='text-sm'>If a file is already there, resubmitting will replace the old file.</p>
+        <input type="file" name="file"
+         className={cssTxt} onChange={handleFileInput}/>
 
         <div className='flex flex-row items-center text-center justify-center align-center'>
               <div className='flex flex-col items-center justify-center'> 
@@ -189,7 +201,11 @@ const Render = () => {
   const [renEntCompleted, setRenEntCompleted] = useState([]);
   const [openIndex, setOpenIndex] = useState(1);
   const [nameSpace, setNameSpace] = useState([]);
-  const [editMenu, setEditMenu] = useState(true);
+  const [editMenu, setEditMenu] = useState(false);
+
+  const [activeMenu, setActiveMenu] = useState({});
+  const [activeFile, setActiveFile] = useState(null);
+  const [reload, setReload] = useState(false);
 
   //Assigns default names to jobs
   const updateIndex = () => {
@@ -206,6 +222,10 @@ const Render = () => {
     }
     setOpenIndex(latestIndex);
     return default_name+latestIndex;
+  }
+  const setEditMen = (data:any) => {
+    setReload(false);
+    setEditMenu(data);
   }
 
   useEffect(() => {
@@ -228,22 +248,31 @@ const Render = () => {
       .catch((error) => {
         console.error('Error:', error);
       });
-    }, 8000);
+    }, refreshTime);
     return () => {
       clearInterval(interval);
     };
   },[]);
   
+  const involkeEditorMenu = (data:any, file:any) => {
+    setReload(true);
+    setActiveMenu(data);
+    setActiveFile(file);  
+    setEditMenu(true);
 
+    console.log(activeMenu);
+  }
 
   return (
     <div>
-      { (editMenu)? <EditMenuN setEditMenu={setEditMenu}/>: <div></div> }
+      { (editMenu)? <EditMenuN setEditMenu={setEditMen} preloaded={reload} db={activeMenu} fs={activeFile} 
+      setPreloaded={setReload}
+      />: <div></div> }
           <div className='grid w-full grid-cols-2 justify-items-center'>
             
             <h1 className='p-2 col-span-2 text-lg font-bold my-3'> Rendering API </h1>
               <h1 className='w-auto px-20 py-4  mx-4 bg-gray-800 text-white'> 
-              Upload Files, Press Seetings, then Press Render </h1>
+              Upload Files, Choose Seetings, then Press Render </h1>
               <h1 className='w-auto px-20 py-4  mx-4 bg-gray-800 text-white'> 
               Contact cmink2040@gmail.com for support</h1>
             
@@ -256,7 +285,7 @@ const Render = () => {
             <h1 className='grid justify-items-center text-base font-bold mb-2 underline '> Upload rendering jobs here: </h1>
            
             { (renEntPause.length > 0) ? renEntPause.map((item:any) => (
-              <RenderingEntity 
+              <RenderingEntity involkeEditorMenu={involkeEditorMenu}
               key={item.name} file={item.file} startFrame={item.startFrame} 
               endFrame={item.endFrame} xRes={item.xRes} yRes={item.yRes} oType={item.oType}
               renderingProgress={item.renderingProgress} status={item.status} name={item.name} />
@@ -296,7 +325,7 @@ const Render = () => {
 
 const RenderingEntity = (props:any) => {
   // Name, File, StartFrame, EndFrame, Resolution
-
+  // PROPS: FETCH DATA FROM API
   //Variables
   const [file, setFile] = useState(props.file);
   const [name, setName] = useState(props.name);
@@ -310,54 +339,14 @@ const RenderingEntity = (props:any) => {
   const [renderingProgress, setRenderingProgress] = useState(0.0);
 
   //Functions
-  const updateStatus = (props:any) => {
-    setRendering(props.status);
-    setRenderingProgress(props.progress);
-    setFile(props.file);
-    setName(props.name);
-    setStartFrame(props.startFrame);
-    setEndFrame(props.endFrame);
-    setXRes(props.xRes);
-    setYRes(props.yRes);
-    setOType(props.oType);
-  }
-  const toDataBase = () => {
-    const data = {
-      name: name,
-      file: file,
-      startFrame: startFrame,
-      endFrame: endFrame,
-      xRes: xRes,
-      yRes: yRes,
-      oType: oType,
-      status: renderStatus,
-      progress: renderingProgress,
-    };
 
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Response:', data);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
 
-  }
   const executeRender = () => {
     const data = {
-      name: name,
-      file: file,
-      run: "True",
+      "title": name,
     };
     setRendering("IN_PROGRESS");
-    fetch(graphicsUrl, {
+    fetch(interactionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -373,45 +362,106 @@ const RenderingEntity = (props:any) => {
       });
 
   }
+ const RetrieveRenders = () => {
+    const onDown = () => {  
+      (async () => {})();
+      
+    }
 
+    return (
+      <button onClick={onDown}> Download Data </button>
+    );
+  
+ }
   //Components
   const RenderButton = () => {
     return(
       <button onClick={executeRender}
-      className='bg-green-500 rounded-full m-4 h-6 w-6 text-white'
+      className='bg-green-500 rounded-full m-4 h-6 w-6 text-white hover:bg-green-300'
       > |&gt; </button>
     );
   }
   
   const EditMenu = () => {
+    const submitC = () => {
+      const data = {
+        'title': name,
+        'xres': xRes,
+        'yres': yRes,
+        'startframe': startFrame,
+        'endframe': endFrame,
+        'otype': oType,
+      }
+      props.involkeEditorMenu(data, file);
+    }
     return(
       <div>
-        <button className='bg-blue-400 rounded-full m-4 h-6 w-6 '>  E   </button>
+        <button onClick={submitC} className='bg-blue-400 rounded-full m-4 h-6 w-6 '>  E   </button>
       </div>
     );
   }
 
   const ProgressBar = () => {
 
+  
 
     return(
       <div>
-        <progress value={renderingProgress*100} max="100" 
+        <progress value={renderingProgress} max="100" 
         className='relative w-full h-4 bg-gray-300 rounded'/>
         <p className='text-sm'> On frame: {startFrame-endFrame*renderingProgress+startFrame}</p>
       </div>
     );
   }
-
+  const Delete = () => {
+    const [deleteCount, setDeleteCount] = useState(0);
+    const remove = () => {
+      if(deleteCount < 3){
+        setDeleteCount(deleteCount+1);
+        return;}
+      else {
+        fetch(interactionUrl, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            
+            // Include any additional headers as required
+          },
+          body: JSON.stringify({
+            "title": name,
+          }),
+        })
+          .then(response => {
+            if (response.ok) {
+              // Handle successful response
+              console.log('Post deleted successfully');
+            } else {
+              // Handle error response
+              console.error('Error deleting post');
+            }
+          })
+          .catch(error => {
+            // Handle fetch error
+            console.error('Fetch error:', error);
+          });
+        }
+      }
+      return(
+        <button onClick={remove}
+        className='h-6 w-6 bg-red-500 text-white rounded-full hover:bg-red-200'> X </button>
+      );
+      }
+     
   return (
     <div className = 'bg-gray-200 text-center rounded-lg px-8 py-4'>
       {name}
       <div className='text-sm'>{file}</div>
       <br/>
-      <div className="grid grid-cols-3 items-center content-center justify-content-center">
+      <div className="grid grid-cols-[1fr,4fr,1fr,1fr] items-center content-center justify-content-center">
         <EditMenu />
         <ProgressBar />
         <RenderButton />
+        <Delete />
       </div>
     </div>
   );
