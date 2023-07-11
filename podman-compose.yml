@@ -28,13 +28,13 @@ services:
         volumes:
             - ./redis-data:/data:Z
 
-    backend:
-        build:
-            context: ./backend
-        ports:
-            - "8000:8000"
-        volumes:
-            - ./backend:/code:Z
-        depends_on:
-            - db
-            - redis
+   # backend:
+     #   build:
+      #      context: ./backend
+     #   ports:
+      #      - "8000:8000"
+     #   volumes:
+     #       - ./backend:/code:Z
+     #   depends_on:
+     #       - db
+     #       - redis

@@ -15,10 +15,16 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = ['http://192.168.4.49','lhttp://localhost']
+CORS_ALLOW_HEADERS = [
+    '_no_cors_',
+    # Other headers...
+]
 CORS_ALLOW_METHODS = [
     'DELETE',  # Add any other HTTP methods you need
     'POST',
     'GET',
+    'PATCH',
 ]
 
 
@@ -31,7 +37,7 @@ SECRET_KEY = 'django-insecure-y8*dx8*b2j%#8h3g(dux8b&l%it%+mu2s9267kcpizfj)qutk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*' ]
 
 
 # Application definition

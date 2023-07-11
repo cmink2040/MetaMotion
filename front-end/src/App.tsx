@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 const refreshTime = 4000;
-const url = 'http://localhost:8000/';
+const url = 'http://192.168.4.49:8000/';
 const graphicsUrl = url + 'graphics/render/blender';
-const interactionUrl = url + '/graphics/render/interact';
+const interactionUrl = url + 'graphics/render/interact';
 const machineLearningUrl = url + 'machinelearning/';
 
 const default_name = 'render_job';
@@ -48,7 +48,9 @@ const App = () => {
           </Routes>
         </BrowserRouter>
         : 
-        <div>Not Approved</div>}
+        <div>Not Approved
+          <h1> You are not allowed to use this. Please exit site immediately. </h1>
+          </div>}
         
     </div>
   
