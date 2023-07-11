@@ -38,6 +38,10 @@ class RenderJob(models.Model):
 
         output_path = directory + '/render_'
         print(output_path)
+        redis_host = 'localhost'
+        redis_port = 6379
+        redis_conn = redis.Redis(host=redis_host, port=redis_port)
+        queue = Queue(connection=redis_conn)
 
         def run_blender_render():
             subprocess_args = ['blender', '-b', self.file.path, '-E', 'CYCLES', '-F',
@@ -50,14 +54,11 @@ class RenderJob(models.Model):
                 str(self.start_frame), '-en', str(self.end_frame)
             ]
             subprocess.run(snd_sub_args)
-        blender_thread = threading.Thread(target=run_blender_render)
-        watch_thread = threading.Thread(target=run_watch)
-
-        blender_thread.start()
-        watch_thread.start()
-
-        blender_thread.join()
-        watch_thread.join()
+        
+        
+        queue.enqueue(run_blender_render)
+        queue.enqueue(run_watch)
+    
         print("RENDERING BEGINNING")
         # Executes blender render command
 

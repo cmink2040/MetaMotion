@@ -8,3 +8,6 @@
 *.pyc
 
 *backend/uploads
+
+*postgres-data/
+*redis-data/
