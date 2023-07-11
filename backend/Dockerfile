@@ -12,3 +12,11 @@ COPY . .
 
 # Run Django server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+FROM ubuntu:latest
+
+RUN apt-get update && apt-get install -y \
+    snapd
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    blender
