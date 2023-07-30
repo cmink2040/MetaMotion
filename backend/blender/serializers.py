@@ -3,7 +3,6 @@ from .models import RenderJob
 from django.shortcuts import render
 
 
-
 class TasksSerial(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     start_frame = serializers.IntegerField()
@@ -22,6 +21,6 @@ class TokenPost(serializers.ModelSerializer):
         fields = '__all__'  # Or specify the fields you want to include/exclude
 
     def __init__(self, *args, **kwargs):
-        # Set many=True in the context to handle a QuerySet
         kwargs['context'] = {'many': True}
         super().__init__(*args, **kwargs)
+        # Set many=True in the context to handle a QuerySet
