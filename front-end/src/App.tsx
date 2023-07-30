@@ -45,7 +45,9 @@ const App = () => {
           </Routes>
         </BrowserRouter>
         : 
-        <div>Not Approved</div>}
+        <div>Not Approved
+          <h1> You are not allowed to use this. Please exit site immediately. </h1>
+          </div>}
         
     </div>
   
