@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4f4205b3-dd50-41df-a223-6467dcccf390" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/backend/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/blender/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/blender/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/blender/watch.py" beforeDir="false" afterPath="$PROJECT_DIR$/blender/watch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/blender/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/blender/serializers.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,7 +28,8 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;redisfeature&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/cmink/AI Projects/pc-writer&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -43,7 +46,11 @@
       <option name="presentableId" value="Default" />
       <updated>1688961282810</updated>
       <workItem from="1688961284146" duration="19491000" />
-      <workItem from="1689055810399" duration="1749000" />
+      <workItem from="1689055810399" duration="2343000" />
+      <workItem from="1689177852543" duration="29000" />
+      <workItem from="1690611290703" duration="3408000" />
+      <workItem from="1690617159142" duration="3068000" />
+      <workItem from="1690644404836" duration="20000" />
     </task>
     <servers />
   </component>

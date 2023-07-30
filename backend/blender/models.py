@@ -33,7 +33,7 @@ class RenderJob(models.Model):
         redis_conn = redis.Redis(host=redis_host, port=redis_port)
         queue = Queue(connection=redis_conn)
 
-    
+
         def run_blender_render():
             print(directory)
             try:

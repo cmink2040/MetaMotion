@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework'
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'messageque',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
         'HOST': 'localhost',
