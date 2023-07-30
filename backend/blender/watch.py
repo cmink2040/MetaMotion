@@ -5,6 +5,8 @@ import requests
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+print('starting!')
+
 url = 'http://localhost:8000/graphics/render/interact'
 parser = argparse.ArgumentParser()
 parser.add_argument('-nm', help='Name of the render task')
@@ -14,18 +16,19 @@ parser.add_argument('-en', help='End frame')
 
 args = parser.parse_args()
 name = args.nm
-src = args.sc
+src = '/home/cmink/Software/server-infra-api/backend/'+args.sc + ''
 start = args.st
 end = args.en
 keepgoing = True
 print(src)
+
 data = {
     'title': name,
     'progress': 0.0,
     'status': "IN_PROGRESS"
 }
 response = requests.patch(url, json=data)
-print(response)
+print(data)
 
 print("RENDERING TASKS STARTED")
 class NewFileHandler(FileSystemEventHandler):
@@ -39,10 +42,11 @@ class NewFileHandler(FileSystemEventHandler):
             c = a-b
             progress = currentFrame/c
             framesMade = "IN_PROGRESS"
-            if (currentFrame == end):
+
+            if (progress==1.0):
                 global keepgoing
                 keepgoing = False
-                framesMade = "COMPLETE"
+                framesMade = "COMPLETED"
 
             data = {
                 'title': name,
@@ -50,10 +54,11 @@ class NewFileHandler(FileSystemEventHandler):
                 'status': framesMade
             }
             response = requests.patch(url, json=data)
+            print(data)
 
     # Create an observer and attach the event handler
 observer = Observer()
-observer.schedule(NewFileHandler(), src, recursive=False)
+observer.schedule(NewFileHandler(), src, recursive=True)
 # Start the observer
 observer.start()
 try:
@@ -63,6 +68,7 @@ try:
 except KeyboardInterrupt:
         # Stop the observer if interrupted
         observer.stop()
+
 observer.join()
 print("RENDERING TASKS DONE")
 # Define a custom event handler

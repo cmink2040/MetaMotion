@@ -1,3 +1,8 @@
+import os
+import shutil
+import zipfile
+
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 
@@ -49,6 +54,7 @@ class RenderAPIView(APIView):
         otype = request.data.get('otype')
         rendernow = request.data.get('rendernow')
         file = request.FILES['file']
+        file_path = default_storage.save('uploads/' + file.name, ContentFile(file.read()))
 
         queryset = RenderJob.objects.all()
         qset1 = queryset.filter(name=title)
@@ -59,28 +65,33 @@ class RenderAPIView(APIView):
                       oType=otype, file=file).save()
         return Response("Job was succesfully created. ", status=200)
 
-        file_path = default_storage.save('uploads/' + file.name, ContentFile(file.read()))
-
-        return Response(status=200)
-
+class IPAPIView(APIView):
+    def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        return Response(client_ip, status=200)
 
 class RenderInteractAPIView(APIView):
+
     def get(self, request):
         return Response("GOOD", status=200)
+
     def patch(self, request):
         print("PATH RECIEVED: ")
         print(request.data)
-        print(request.data.get('title'), request.data.get('progress'), request.data.get('status'))
+        print('retarded mf')
+        print(request.data['title'], request.data.get('progress'), request.data.get('status'), 'holly fuck')
         name = request.data.get('title')
         queryset = RenderJob.objects.all()
         qset1 = queryset.filter(name=name).first()
-        if (qset1):
-            qset1.progress = request.data.get('progress')
-            qset1.status = request.data.get('status')
-            qset1.save()
+        print(qset1, ' bunch of mfs just to improve readablility', name)
+        if qset1:
+            print('not null')
+            qset1.update(
+                request.data.get('progress'), request.data.get('status'))
             return Response("Render Updated", status=200)
         else:
             return Response("FAILED NOT FOUND", status=404)
+
     def post(self, request):
         name = request.data.get('title')
         queryset = RenderJob.objects.all()
@@ -90,6 +101,7 @@ class RenderInteractAPIView(APIView):
             return Response("Render Started", status=200)
         else:
             return Response("FAILED NOT FOUND", status=404)
+
     def delete(self, request):
         name = request.data.get('title')
         queryset = RenderJob.objects.all()
@@ -99,3 +111,40 @@ class RenderInteractAPIView(APIView):
             return Response("Render Deleted", status=200)
         else:
             return Response("FAILED NOT FOUND", status=404)
+
+class DownloadAPI(APIView):
+    def get(self, request, filename):
+            # Replace 'uploads' with the name of your directory containing the files
+            directory_path = os.path.join('uploads', filename)
+
+            # Create a temporary directory to store the zip file
+            temp_dir = 'temp_zip'
+            os.makedirs(temp_dir, exist_ok=True)
+
+            # Copy all files from the directory to the temporary directory
+            for root, dirs, files in os.walk(directory_path):
+                for file in files:
+                    source_path = os.path.join(root, file)
+                    destination_path = os.path.join(temp_dir, file)
+                    shutil.copy2(source_path, destination_path)
+
+            # Create a zip archive of the temporary directory
+            zip_filename = f"{filename}.zip"
+            with zipfile.ZipFile(zip_filename, 'w') as zip_file:
+                for root, dirs, files in os.walk(temp_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zip_file.write(file_path, os.path.relpath(file_path, temp_dir))
+
+            # Read the zip file data
+            with open(zip_filename, 'rb') as f:
+                file_data = f.read()
+
+            # Delete the temporary directory and zip file
+            shutil.rmtree(temp_dir)
+            os.remove(zip_filename)
+
+            # Set the appropriate response headers for download
+            response = HttpResponse(file_data, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{filename}.zip"'
+            return response
