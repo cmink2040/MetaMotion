@@ -13,6 +13,8 @@ for successfully managing and planning months or years of projects.
 
 Many software have been developed to accommendate workflows, like Pixar Tractor, Flameco, Jira, etc. but collectively have flaws. For example, our team may use different rendering engines depending on the art style of the project, but rendering nodes typically only support one kind of engine. Furthermore, our team desired a centralized management system, instead of fragmentation through multiple software they were unfamiliar with.
 
+# Architecture
+![diagram depicting architecture](demos/architecture.jpg)
 
-
-
+The architecture for this service consists of 5 microservices. One of these is the front-end web server. Another is the backend request. There is a database and a cloud storage. And lastly, there is a worker server, ran by a collections of computing machines optimized for rendering. 
+The front-end is written in React for dynamic websites. The backend is was built with Django for scailability. These two services communicate mainly using REST. The backend communicates with DB through Django's built-in ORM.
